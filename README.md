@@ -34,3 +34,12 @@ export CANARY_WEBHOOK_API_URL="<your_webhook_url>" ( OR ADD WEBHOOK TO ENV )
 ./cli/spectre ssrf-scan "http://example.com/page?url=FUZZ"
 ```
 BUILT FOR LEARNING - DO NOT USE MALICIOUSLY 
+
+
+## If above commands dont work, or bot loads 0 plugins try below commands -- 
+'''base 
+  mkdir -p all_plugins && find build/plugins -name "*.so" -exec cp {} all_plugins/ \;
+  LD_LIBRARY_PATH=./build/spectre-d:./build/_deps/cpr-build/cpr ./build/spectre-d/spectre-d all_plugins/
+
+  Other terminal -- 
+  go run . attack https://example.com
