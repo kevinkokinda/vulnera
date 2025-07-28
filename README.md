@@ -23,8 +23,8 @@ go build -o spectre
 **Terminal 1: Start Daemon**
 ```bash
 # From project root
-export LD_LIBRARY_PATH=$(pwd)/build/install/lib
-export CANARY_WEBHOOK_API_URL="<your_webhook_url>"
+export LD_LIBRARY_PATH=$(pwd)/build/install/lib 
+export CANARY_WEBHOOK_API_URL="<your_webhook_url>" ( OR ADD WEBHOOK TO ENV )
 ./build/install/bin/spectre-d
 ```
 
