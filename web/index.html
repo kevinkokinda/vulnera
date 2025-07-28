@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SLOPSCAN</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0a0a0a;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            overflow-x: hidden;
+        }
+        
+        .header {
+            background: #1a1a1a;
+            border-bottom: 2px solid #00ff00;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 3em;
+            text-shadow: 0 0 10px #00ff00;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #888;
+            font-size: 1.2em;
+        }
+        
+        .scan-input {
+            background: #1a1a1a;
+            padding: 30px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .scan-box {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .scan-box input {
+            flex: 1;
+            padding: 15px;
+            background: #000;
+            border: 2px solid #333;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+        }
+        
+        .scan-box input:focus {
+            outline: none;
+            border-color: #00ff00;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+        }
+        
+        .scan-box button {
+            padding: 15px 30px;
+            background: #003300;
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .scan-box button:hover {
+            background: #00ff00;
+            color: #000;
+        }
+        
+        .feed-container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .feed-header {
+            color: #00ff00;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+        
+        .vulnerability-entry {
+            background: #111;
+            border: 1px solid #333;
+            margin-bottom: 10px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s;
+        }
+        
+        .vulnerability-entry:hover {
+            border-color: #00ff00;
+            box-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
+        }
+        
+        .vuln-time {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .vuln-target {
+            color: #00ff00;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .vuln-type {
+            color: #ff6666;
+            font-weight: bold;
+        }
+        
+        .vuln-proof {
+            color: #888;
+            font-size: 0.8em;
+            font-family: monospace;
+        }
+        
+        .stats {
+            background: #1a1a1a;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+        }
+        
+        .stats h3 {
+            color: #00ff00;
+            margin-bottom: 10px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .scan-result {
+            background: #1a1a1a;
+            border: 2px solid #00ff00;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+            display: none;
+        }
+        
+        .scan-output {
+            background: #000;
+            padding: 15px;
+            border: 1px solid #333;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+        }
+        .vulnerability-entry.collapsed .vuln-details { display:none; }
+        .vuln-details { margin-top:10px;color:#ccc;font-size:0.8em;white-space:pre-wrap;background:#000;padding:10px;border:1px solid #222;overflow-x:auto; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SLOPKILLER</h1>
+        <p>--</p>
+    </div>
+    
+    <div class="scan-input">
+        <div class="scan-box">
+            <input type="text" id="target-input" placeholder="Enter target URL (e.g., https://example.com)" />
+            <button onclick="startScan()">SCAN</button>
+        </div>
+    </div>
+    
+    <div id="scan-result" class="scan-result">
+        <h3>Scan in Progress...</h3>
+        <div id="scan-output" class="scan-output"></div>
+    </div>
+    
+    <div class="feed-container">
+        <div class="stats">
+            <h3>Network Statistics</h3>
+            <div class="stat-item"><span>Active Nodes:</span> <span id="active-nodes">x</span></div>
+            <div class="stat-item"><span>Vulnerabilities Today:</span> <span id="vulns-today">x</span></div>
+            <div class="stat-item"><span>Total Disclosures:</span> <span id="total-disclosures">x</span></div>
+        </div>
+        
+        <div class="feed-header">
+            LIVE VULNERABILITY FEED
+        </div>
+        
+        <div id="vulnerability-feed">
+        </div>
+    </div>
+    
+    <script>
+        let scanSocket = null;
+        
+        function startScan() {
+            const target = document.getElementById('target-input').value.trim();
+            if (!target) {
+                alert('Please enter a target URL');
+                return;
+            }
+
+            const resultDiv = document.getElementById('scan-result');
+            const outputDiv = document.getElementById('scan-output');
+
+            resultDiv.style.display = 'block';
+            outputDiv.textContent = '[spectre] Initializing scan for ' + target + '\n';
+
+            fetch('/scan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ target: target }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                outputDiv.textContent += `[spectre] ${data.status}\n`;
+            })
+            .catch(error => {
+                outputDiv.textContent += `[spectre] Error: ${error}\n`;
+            });
+        }
+        
+        function addVulnerability(data) {
+            const feed = document.getElementById('vulnerability-feed');
+            const entry = document.createElement('div');
+            entry.className = 'vulnerability-entry collapsed';
+
+            const time = new Date().toISOString().slice(0,19)+ 'Z';
+            const target = data.target || data.url || data.host || 'unknown';
+            const vtype = data.vuln_type || data.type || 'INFO';
+            const details = JSON.stringify(data.evidence || data, null, 2);
+
+            entry.innerHTML = `
+                <div class="vuln-time">[${time}]</div>
+                <div class="vuln-target">${target}</div>
+                <div class="vuln-type">[${vtype}]</div>
+                <div class="vuln-details">${details}</div>
+            `;
+            entry.addEventListener('click', ()=>{
+                entry.classList.toggle('collapsed');
+            });
+            feed.insertBefore(entry, feed.firstChild);
+            while(feed.children.length>50) feed.removeChild(feed.lastChild);
+        }
+        
+        (function connectFeed() {
+            const wsUrl = `ws://${location.hostname || 'localhost'}:8889`;
+            const feedSocket = new WebSocket(wsUrl);
+            feedSocket.onopen = () => console.log('[ticker] connected to', wsUrl);
+            feedSocket.onmessage = (e)=>{
+                try {
+                    const data = JSON.parse(e.data);
+                    if(data.vuln_type || data.evidence){
+                        addVulnerability(data);
+                    }
+                }catch(_){}
+            };
+            feedSocket.onclose = () => {
+                console.log('[ticker] websocket closed, retrying in 3s');
+                setTimeout(connectFeed, 3000);
+            };
+            feedSocket.onerror = () => feedSocket.close();
+        })();
+    </script>
+</body>
+</html> 

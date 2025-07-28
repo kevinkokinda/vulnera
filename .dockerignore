@@ -1,0 +1,7 @@
+build/
+.git
+.gitignore
+node_modules/
+*.o
+*.a
+*.so 

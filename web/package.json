@@ -1,0 +1,11 @@
+{
+  "name": "spectre-test-site",
+  "version": "1.0.0",
+  "description": "A test site for spectre",
+  "main": "index.js",
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "internal-billing-component": "1.0.0"
+  }
+} 

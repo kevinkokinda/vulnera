@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+  spectre-daemon:
+    build: .
+    container_name: spectre-daemon
+    ports:
+      - "8888:8888/udp"
+      - "8081:8081"
+    networks:
+      - spectre_net
+  web:
+    image: nginx:alpine
+    container_name: spectre-web
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8080:80"
+    networks:
+      - spectre_net
+networks:
+  spectre_net:
+    driver: bridge 
