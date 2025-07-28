@@ -32,4 +32,3 @@ cd cli
 go run . attack https://example.com
 ```
 
-I'll apply this change now.
